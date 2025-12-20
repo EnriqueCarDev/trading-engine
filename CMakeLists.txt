@@ -6,22 +6,37 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-
-# Find Boost with required components
-# find_package(Boost REQUIRED COMPONENTS system thread)
-# find_package(OpenSSL REQUIRED)
-
-# link_directories(${OPENSSL_LIBRARIES})
+# -------------------------
 # Main executable
+# -------------------------
 add_executable(trading_engine
     src/main.cpp
     src/orderbook.cpp
 )
 
-# Include directories
 target_include_directories(trading_engine PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
-# Link Boost and pthread
-# target_link_libraries(main PRIVATE Boost::filesystem Boost::system)
+# -------------------------
+# GoogleTest setup (portable)
+# -------------------------
+# Add GoogleTest subdirectory
+add_subdirectory(extern/googletest)
 
+# Test executable
+add_executable(OrderBookTests
+    tests/test_orderbook.cpp
+    src/orderbook.cpp
+)
+
+target_include_directories(OrderBookTests PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+target_link_libraries(OrderBookTests PRIVATE
+    gtest_main
+    pthread
+)
+
+# Enable CTest integration
+enable_testing()
+add_test(NAME OrderBookTests COMMAND OrderBookTests)

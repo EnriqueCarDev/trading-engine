@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <iostream>
 #include <map>
 #include <vector>
 #include "pricelevels.hpp"
@@ -24,8 +25,9 @@ struct Trade {
 
 class OrderBookListener {
   public:
-   virtual void onOrder(const Order& order) {}
-   virtual void onTrade(const Trade& trade) {}
+   virtual void onOrder(const Order& order) = 0;
+   virtual void onTrade(const Trade& trade) = 0;
+   virtual ~OrderBookListener() = default;
 };
 
 struct BookLevel {

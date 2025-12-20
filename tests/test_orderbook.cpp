@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <iostream>
 #include "orderbook_layers/orderbook.hpp"
 
 class TestListener : public OrderBookListener {
@@ -17,13 +16,13 @@ TEST(OrderBookTest, SingleFullFill) {
 
    long exchangeId = 123;
 
-   Order* restingOrder =
-       new Order(exchangeId, "1", 100, Order::SELL, Order::GoodTillCancel, 500);
-   Order* aggressorOrder =
-       new Order(exchangeId, "2", 100, Order::BUY, Order::GoodTillCancel, 500);
+   Order restingOrder(exchangeId, "1", 100, Order::SELL, Order::GoodTillCancel,
+                      500);
+   Order aggressorOrder(exchangeId, "2", 100, Order::BUY, Order::GoodTillCancel,
+                        500);
 
-   orderBook.insertOrder(restingOrder);
-   orderBook.insertOrder(aggressorOrder);
+   orderBook.insertOrder(&restingOrder);
+   orderBook.insertOrder(&aggressorOrder);
 
    ASSERT_EQ(listener.trades_.size(), 1);
    ASSERT_EQ(listener.trades_[0].price_, 100);
@@ -40,13 +39,13 @@ TEST(OrderBookTest, PartialFill) {
 
    long exchangeId = 123;
 
-   Order* restingOrder =
-       new Order(exchangeId, "1", 100, Order::SELL, Order::GoodTillCancel, 500);
-   Order* aggressorOrder =
-       new Order(exchangeId, "2", 100, Order::BUY, Order::GoodTillCancel, 300);
+   Order restingOrder(exchangeId, "1", 100, Order::SELL, Order::GoodTillCancel,
+                      500);
+   Order aggressorOrder(exchangeId, "2", 100, Order::BUY, Order::GoodTillCancel,
+                        300);
 
-   orderBook.insertOrder(restingOrder);
-   orderBook.insertOrder(aggressorOrder);
+   orderBook.insertOrder(&restingOrder);
+   orderBook.insertOrder(&aggressorOrder);
 
    ASSERT_EQ(listener.trades_.size(), 1);
    ASSERT_EQ(listener.trades_[0].quantity_, 300);
@@ -54,4 +53,37 @@ TEST(OrderBookTest, PartialFill) {
    Book snapshot = orderBook.book();
    ASSERT_FALSE(snapshot.asks_.empty());
    ASSERT_EQ(snapshot.asks_[0].quantity, 200);
+}
+
+TEST(OrderBookTest, CancelOrder) {
+   TestListener listener;
+   OrderBook orderBook{listener};
+
+   long exchangeId = 123;
+
+   Order order(exchangeId, "1", 100, Order::SELL, Order::GoodTillCancel, 500);
+
+   orderBook.insertOrder(&order);
+   Book snap1 = orderBook.book();
+   ASSERT_EQ(snap1.asks_.size(), 1);
+   orderBook.cancelOrder(&order);
+   Book snap2 = orderBook.book();
+   ASSERT_EQ(snap2.asks_.size(), 0);
+}
+
+TEST(OrderBookTest, BookLevels) {
+   TestListener listener;
+   OrderBook orderBook{listener};
+
+   long exchangeId = 123;
+
+   Order o1(exchangeId, "1", 100, Order::SELL, Order::GoodTillCancel, 500);
+   Order o2(exchangeId, "1", 99, Order::SELL, Order::GoodTillCancel, 500);
+
+   orderBook.insertOrder(&o1);
+   orderBook.insertOrder(&o2);
+
+   auto snapshot = orderBook.book();
+
+   ASSERT_EQ(snapshot.asks_.size(), 2);
 }

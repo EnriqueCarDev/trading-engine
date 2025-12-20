@@ -1,4 +1,5 @@
 #include "orderbook_layers/orderbook.hpp"
+#include <iostream>
 
 void OrderBook::matchOrders(Order::Side aggressorSide) {
    while (!bids_.empty() && !asks_.empty()) {
@@ -12,6 +13,12 @@ void OrderBook::matchOrders(Order::Side aggressorSide) {
 
          Order* aggressor = aggressorSide == Order::BUY ? bestBid : bestAsk;
          Order* opposite = aggressorSide == Order::BUY ? bestAsk : bestBid;
+
+         std::cout << "match found for quantity: " << quantity
+                   << " at price: " << price << std::endl;
+
+         std::cout << "Matched between " << aggressor->getId() << " and "
+                   << opposite->getId() << std::endl;
 
          aggressor->fillOrder(quantity);
          opposite->fillOrder(quantity);

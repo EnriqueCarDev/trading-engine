@@ -27,7 +27,7 @@ class OrderList {
       bool operator==(const Iterator& other) const {
          return current == other.current;
       }
-      operator void*() const { return current; }
+      explicit operator bool() const { return current != nullptr; }
 
      private:
       Iterator(Node* node) : current(node) {}

@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <iostream>
+#include <list>
 #include <map>
 #include <vector>
 #include "pricelevels.hpp"
@@ -23,11 +24,35 @@ struct Trade {
    const Order& opposite_;
 };
 
-class OrderBookListener {
+class DataConsummer {
   public:
-   virtual void onOrder(const Order& order) = 0;
-   virtual void onTrade(const Trade& trade) = 0;
-   virtual ~OrderBookListener() = default;
+   virtual void consumeOrder(const Order& order) = 0;
+   virtual void consumeTrade(const Trade& trade) = 0;
+};
+
+class OrderBookListener {
+   std::list<DataConsummer*> subscribers_;
+
+  public:
+   void attach(DataConsummer* subscriber) {
+      subscribers_.push_back(subscriber);
+   }
+
+   void detach(DataConsummer* dataConsumer) {
+      subscribers_.remove(dataConsumer);
+   }
+
+   void onOrder(const Order& order) {
+      for (auto sub : subscribers_) {
+         sub->consumeOrder(order);
+      }
+   };
+   void onTrade(const Trade& trade) {
+      for (auto sub : subscribers_) {
+         sub->consumeTrade(trade);
+      }
+   };
+   ~OrderBookListener() = default;
 };
 
 struct BookLevel {

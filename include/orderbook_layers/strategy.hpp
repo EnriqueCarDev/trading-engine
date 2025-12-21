@@ -1,22 +1,21 @@
 #pragma once
 #include "orderbook.hpp"
 
-class CustomListener : OrderBookListener {
-   std::vector<Trade> trades_;
-   std::uint32_t midPrice_;
-   std::uint32_t inventory;
+class InventoryConsumer : DataConsummer {
+   std::uint64_t position = 0;
+   std::uint64_t openBuyQty = 0;
+   std::uint64_t openSellQty = 0;
 
-   void updateInventory(const Trade& trade) {
-      if (trade.aggressor_.getSide() == Order::BUY) {
-         inventory += trade.quantity_;
-      } else {
-         inventory -= trade.quantity_;
-      }
-   }
+   double averagePrice = 0;
+   double pnl = 0;
+
+   void computeAveragePrice(std::uint32_t qty, std::uint32_t price) {}
+
+   void updateInventory() {}
+
+   void computePnl() {}
 
   public:
-   void onTrade(const Trade& trade) override {
-      trades_.push_back(trade);
-      updateInventory(trade);
-   }
+   void consumeTrade(const Trade& trade) override {}
+   void consumeOrder(const Order& order) override {}
 };

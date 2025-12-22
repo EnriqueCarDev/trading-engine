@@ -29,6 +29,7 @@ struct Order {
    std::uint32_t price_;
    std::uint32_t avgPrice_ = 0;
    Side side_;
+   bool is_mine_;
    OrderType type_;
    std::uint32_t initial_quantity_;
    std::uint32_t remaining_quantity_;
@@ -70,6 +71,7 @@ struct Order {
       return remaining_quantity_;
    }
    bool isOnList() const { return node.order != nullptr; }
+   bool isMyOrder() const { return is_mine_; }
 
    bool isFilled() const {
       return remaining_quantity_ == 0 && filled_ == initial_quantity_;

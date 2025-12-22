@@ -47,6 +47,7 @@ void OrderBook::insertOrder(Order* order) {
    } else {
       asks_.insertOrder(order);
    }
+   listener_.onOrder(*order);
 
    matchOrders(order->getSide());
 }

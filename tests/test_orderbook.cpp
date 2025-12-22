@@ -1,18 +1,21 @@
 #include <gtest/gtest.h>
 #include "orderbook_layers/orderbook.hpp"
 
-class TestListener : public OrderBookListener {
+class TestListener : public DataConsummer {
   public:
    std::vector<Order> orders_;
    std::vector<Trade> trades_;
 
-   void onOrder(const Order& order) override { orders_.push_back(order); }
-   void onTrade(const Trade& trade) override { trades_.push_back(trade); }
+   void consumeOrder(const Order& order) override { orders_.push_back(order); }
+   void consumeTrade(const Trade& trade) override { trades_.push_back(trade); }
 };
 
 TEST(OrderBookTest, SingleFullFill) {
    TestListener listener;
-   OrderBook orderBook{listener};
+
+   OrderBookListener orderBookListener;
+
+   OrderBook orderBook{orderBookListener};
 
    long exchangeId = 123;
 
@@ -35,7 +38,10 @@ TEST(OrderBookTest, SingleFullFill) {
 
 TEST(OrderBookTest, PartialFill) {
    TestListener listener;
-   OrderBook orderBook{listener};
+
+   OrderBookListener orderBookListener;
+
+   OrderBook orderBook{orderBookListener};
 
    long exchangeId = 123;
 
@@ -57,7 +63,10 @@ TEST(OrderBookTest, PartialFill) {
 
 TEST(OrderBookTest, CancelOrder) {
    TestListener listener;
-   OrderBook orderBook{listener};
+
+   OrderBookListener orderBookListener;
+
+   OrderBook orderBook{orderBookListener};
 
    long exchangeId = 123;
 
@@ -73,7 +82,10 @@ TEST(OrderBookTest, CancelOrder) {
 
 TEST(OrderBookTest, BookLevels) {
    TestListener listener;
-   OrderBook orderBook{listener};
+
+   OrderBookListener orderBookListener;
+
+   OrderBook orderBook{orderBookListener};
 
    long exchangeId = 123;
 

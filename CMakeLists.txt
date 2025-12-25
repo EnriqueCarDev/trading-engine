@@ -26,6 +26,7 @@ add_subdirectory(extern/googletest)
 add_executable(OrderBookTests
     tests/test_orderbook.cpp
     tests/test_order.cpp
+    src/orderbook_learn.cpp
     src/orderbook.cpp
 )
 

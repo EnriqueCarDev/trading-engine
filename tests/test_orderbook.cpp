@@ -129,3 +129,94 @@ TEST(OrderBookTest, BookLevels) {
 
    ASSERT_EQ(snapshot.asks_.size(), 2);
 }
+
+TEST(OrderBookTest, FIFOAtSamePrice) {
+   TestListener listener;
+   OrderBookListener obl;
+   obl.attach(&listener);
+
+   OrderBook book{obl};
+
+   Order s1(1, "s1", 100, Order::SELL, Order::GoodTillCancel, 100);
+   Order s2(1, "s2", 100, Order::SELL, Order::GoodTillCancel, 100);
+   Order b1(1, "b1", 100, Order::BUY, Order::GoodTillCancel, 150);
+
+   book.insertOrder(&s1);
+   book.insertOrder(&s2);
+   book.insertOrder(&b1);
+
+   ASSERT_EQ(listener.trades_.size(), 2);
+   ASSERT_EQ(listener.trades_[0].quantity_, 100);
+   ASSERT_EQ(listener.trades_[1].quantity_, 50);
+}
+
+TEST(OrderBookTest, NoCrossNoTrade) {
+   TestListener listener;
+   OrderBookListener obl;
+   obl.attach(&listener);
+
+   OrderBook book{obl};
+
+   Order sell(1, "s", 105, Order::SELL, Order::GoodTillCancel, 100);
+   Order buy(1, "b", 100, Order::BUY, Order::GoodTillCancel, 100);
+
+   book.insertOrder(&sell);
+   book.insertOrder(&buy);
+
+   ASSERT_TRUE(listener.trades_.empty());
+}
+
+TEST(OrderBookTest, SweepMultipleLevels) {
+   TestListener listener;
+   OrderBookListener obl;
+   obl.attach(&listener);
+
+   OrderBook book{obl};
+
+   Order s1(1, "s1", 100, Order::SELL, Order::GoodTillCancel, 50);
+   Order s2(1, "s2", 101, Order::SELL, Order::GoodTillCancel, 50);
+   Order s3(1, "s3", 102, Order::SELL, Order::GoodTillCancel, 50);
+   Order b(1, "b", 103, Order::BUY, Order::GoodTillCancel, 120);
+
+   book.insertOrder(&s1);
+   book.insertOrder(&s2);
+   book.insertOrder(&s3);
+   book.insertOrder(&b);
+
+   ASSERT_EQ(listener.trades_.size(), 3);
+   ASSERT_EQ(book.book().asks_[0].price, 102);
+   ASSERT_EQ(book.book().asks_[0].quantity, 30);
+}
+
+TEST(OrderBookTest, CancelAfterPartialFill) {
+   TestListener listener;
+   OrderBookListener obl;
+   obl.attach(&listener);
+
+   OrderBook book{obl};
+
+   Order s(1, "s", 100, Order::SELL, Order::GoodTillCancel, 100);
+   Order b(1, "b", 100, Order::BUY, Order::GoodTillCancel, 40);
+
+   book.insertOrder(&s);
+   book.insertOrder(&b);
+   book.cancelOrder(&s);
+
+   ASSERT_TRUE(book.book().asks_.empty());
+}
+
+TEST(OrderBookTest, CancelNonExistingOrder) {
+   TestListener listener;
+   OrderBookListener obl;
+   obl.attach(&listener);
+
+   OrderBook book{obl};
+
+   Order s(1, "s", 100, Order::SELL, Order::GoodTillCancel, 100);
+   Order b(1, "b", 100, Order::BUY, Order::GoodTillCancel, 100);
+
+   book.insertOrder(&s);
+   book.insertOrder(&b);
+
+   EXPECT_THROW(book.cancelOrder(&b), std::runtime_error);
+}

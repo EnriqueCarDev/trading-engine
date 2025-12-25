@@ -15,6 +15,8 @@ TEST(OrderBookTest, SingleFullFill) {
 
    OrderBookListener orderBookListener;
 
+   orderBookListener.attach(&listener);
+
    OrderBook orderBook{orderBookListener};
 
    long exchangeId = 123;
@@ -41,6 +43,8 @@ TEST(OrderBookTest, PartialFill) {
 
    OrderBookListener orderBookListener;
 
+   orderBookListener.attach(&listener);
+
    OrderBook orderBook{orderBookListener};
 
    long exchangeId = 123;
@@ -61,11 +65,37 @@ TEST(OrderBookTest, PartialFill) {
    ASSERT_EQ(snapshot.asks_[0].quantity, 200);
 }
 
+TEST(OrderBookTest, HugeFillPartial) {
+   TestListener listener;
+
+   OrderBookListener orderBookListener;
+   orderBookListener.attach(&listener);
+   OrderBook orderBook{orderBookListener};
+
+   long exchangeId = 123;
+
+   Order restingOrder1(exchangeId, "1", 101, Order::SELL, Order::GoodTillCancel,
+                       20);
+   Order restingOrder2(exchangeId, "2", 102, Order::SELL, Order::GoodTillCancel,
+                       90);
+   Order aggressorOrder(exchangeId, "3", 103, Order::BUY, Order::GoodTillCancel,
+                        100);
+
+   orderBook.insertOrder(&restingOrder1);
+   orderBook.insertOrder(&restingOrder2);
+   orderBook.insertOrder(&aggressorOrder);
+
+   Book snapshot = orderBook.book();
+   ASSERT_FALSE(snapshot.asks_.empty());
+   ASSERT_EQ(snapshot.asks_.size(), 1);
+   ASSERT_EQ(snapshot.asks_[0].quantity, 10);
+}
+
 TEST(OrderBookTest, CancelOrder) {
    TestListener listener;
 
    OrderBookListener orderBookListener;
-
+   orderBookListener.attach(&listener);
    OrderBook orderBook{orderBookListener};
 
    long exchangeId = 123;
@@ -84,7 +114,7 @@ TEST(OrderBookTest, BookLevels) {
    TestListener listener;
 
    OrderBookListener orderBookListener;
-
+   orderBookListener.attach(&listener);
    OrderBook orderBook{orderBookListener};
 
    long exchangeId = 123;

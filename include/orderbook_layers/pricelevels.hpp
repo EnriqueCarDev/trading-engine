@@ -43,7 +43,7 @@ class PriceLevels {
       auto it = std::lower_bound(levels.begin(), levels.end(),
                                  order->getPrice(), compFn);
       if (it == levels.end() || it->getPrice() != order->getPrice())
-         throw new std::runtime_error("Price level for order does not exist");
+         throw std::runtime_error("Price level for order does not exist");
 
       it->remove(order);
 

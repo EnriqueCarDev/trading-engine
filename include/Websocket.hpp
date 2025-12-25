@@ -18,7 +18,7 @@ namespace net = boost::asio;             // from <boost/asio.hpp>
 using tcp = boost::asio::ip::tcp;        // from <boost/asio/ip/tcp.hpp>
 
 // Report a failure
-void fail(beast::error_code ec, char const *what) {
+void fail(beast::error_code ec, char const* what) {
    std::cerr << what << ": " << ec.message() << "\n";
 }
 
@@ -29,7 +29,7 @@ class session : public std::enable_shared_from_this<session> {
 
   public:
    // Take ownership of the socket
-   explicit session(tcp::socket &&socket) : ws_(std::move(socket)) {}
+   explicit session(tcp::socket&& socket) : ws_(std::move(socket)) {}
 
    // Get on the correct executor
    void run() {
@@ -47,7 +47,7 @@ class session : public std::enable_shared_from_this<session> {
 
       // Set a decorator to change the Server of the handshake
       ws_.set_option(
-          websocket::stream_base::decorator([](websocket::response_type &res) {
+          websocket::stream_base::decorator([](websocket::response_type& res) {
              res.set(http::field::server,
                      std::string(BOOST_BEAST_VERSION_STRING) +
                          " websocket-server-async");
@@ -102,11 +102,11 @@ class session : public std::enable_shared_from_this<session> {
 
 // Accepts incoming connections and launches the sessions
 class listener : public std::enable_shared_from_this<listener> {
-   net::io_context &ioc_;
+   net::io_context& ioc_;
    tcp::acceptor acceptor_;
 
   public:
-   listener(net::io_context &ioc, tcp::endpoint endpoint)
+   listener(net::io_context& ioc, tcp::endpoint endpoint)
        : ioc_(ioc), acceptor_(ioc) {
       beast::error_code ec;
 

@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <random>
 #include "orderbook_layers/orderbook.hpp"
 
 class TestListener : public DataConsummer {
@@ -219,4 +220,62 @@ TEST(OrderBookTest, CancelNonExistingOrder) {
    book.insertOrder(&b);
 
    EXPECT_THROW(book.cancelOrder(&b), std::runtime_error);
+}
+
+TEST(OrderBookTest, BookIsSorted) {
+   TestListener listener;
+   OrderBookListener obl;
+   obl.attach(&listener);
+
+   OrderBook book{obl};
+   auto snap = book.book();
+
+   for (size_t i = 1; i < snap.asks_.size(); ++i)
+      ASSERT_LT(snap.asks_[i - 1].price, snap.asks_[i].price);
+
+   for (size_t i = 1; i < snap.bids_.size(); ++i)
+      ASSERT_GT(snap.bids_[i - 1].price, snap.bids_[i].price);
+}
+
+TEST(OrderBookTest, ZeroQuantityIgnored) {
+   TestListener listener;
+   OrderBookListener obl;
+   obl.attach(&listener);
+
+   OrderBook book{obl};
+   Order o(1, "bad", 100, Order::BUY, Order::GoodTillCancel, 0);
+   book.insertOrder(&o);
+   ASSERT_TRUE(book.book().bids_.empty());
+}
+
+TEST(OrderBookTest, Insert100kRandomOrders) {
+   TestListener listener;
+   OrderBookListener obl;
+   obl.attach(&listener);
+   OrderBook book{obl};
+
+   std::mt19937 rng(42);
+   std::uniform_int_distribution<int> sideDist(0, 1);
+   std::uniform_int_distribution<int> priceDist(90, 110);
+   std::uniform_int_distribution<int> qtyDist(1, 100);
+
+   constexpr int N = 100000;
+
+   std::vector<Order> orders;
+   orders.reserve(N);
+
+   for (size_t i{}; i < N; ++i) {
+      orders.emplace_back(1, std::to_string(i), priceDist(rng),
+                          sideDist(rng) ? Order::SELL : Order::BUY,
+                          Order::GoodTillCancel, qtyDist(rng));
+   }
+
+   for (Order& o : orders) {
+      book.insertOrder(&o);
+   }
+
+   auto snap = book.book();
+
+   ASSERT_TRUE(snap.bids_.empty() || snap.asks_.empty() ||
+               snap.bids_[0].price < snap.asks_[0].price);
 }
